@@ -15,3 +15,8 @@ def test_event_and_experiment_rows_reference_customers():
     assert all(row["customer_id"] in ids for row in tables["events"])
     assert all(row["customer_id"] in ids for row in tables["experiment_assignments"])
     assert {row["variant"] for row in tables["experiment_assignments"]} <= {"control", "treatment"}
+
+
+def test_paid_demo_data_has_active_and_cancelled_subscriptions():
+    statuses = {row["status"] for row in generate_records(seed=20261124, customers=300)["subscriptions"]}
+    assert statuses == {"active", "cancelled"}

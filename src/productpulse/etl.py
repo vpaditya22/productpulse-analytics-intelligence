@@ -41,7 +41,9 @@ def load_csvs(data_dir: str | Path = DEFAULT_DATA_DIR, url: str | None = None) -
                 # PostgreSQL COPY protocol streams rows without loading a full file into memory.
                 with conn.cursor().copy(query) as copy:
                     copy.write(csv_file.read().encode("utf-8"))
-            counts[table] = sum(1 for _ in csv.DictReader(file_path.open(newline="", encoding="utf-8")))
+            with file_path.open(newline="", encoding="utf-8") as count_file:
+                counts[table] = sum(1 for _ in csv.DictReader(count_file))
+        conn.execute("ANALYZE customers; ANALYZE events; ANALYZE subscriptions; ANALYZE experiment_assignments;")
     return counts
 
 

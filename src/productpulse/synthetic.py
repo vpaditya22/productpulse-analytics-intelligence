@@ -47,9 +47,11 @@ def generate_records(seed: int = SEED, customers: int = 300) -> dict[str, list[d
                                "event_name": event_name, "occurred_at": occurred_at.isoformat(),
                                "feature_name": rng.choice(FEATURES) if event_name == "feature_used" else ""})
         if plan != "free":
+            cancelled = rng.random() < 0.18
+            ended_at = min(END, created + timedelta(days=rng.randrange(14, 181))) if cancelled else None
             subscription_rows.append({"subscription_id": f"S{i:05d}", "customer_id": customer_id,
-                                      "started_at": created.isoformat(), "ended_at": "", "plan": plan,
-                                      "monthly_price": price, "status": "active"})
+                                      "started_at": created.isoformat(), "ended_at": ended_at.isoformat() if ended_at else "", "plan": plan,
+                                      "monthly_price": price, "status": "cancelled" if cancelled else "active"})
         variant = "treatment" if rng.random() < 0.5 else "control"
         converted = rng.random() < (0.145 if variant == "treatment" else 0.12)
         experiment_rows.append({"experiment_id": "EXP_ONBOARDING_01", "customer_id": customer_id,

@@ -81,7 +81,7 @@ SELECT plan, COUNT(*) FILTER(WHERE status='cancelled')::numeric/NULLIF(COUNT(*),
 
 -- Q17: Customer lifetime value proxy (monthly price × observed tenure in months)
 SELECT plan, ROUND(AVG(monthly_price * GREATEST(1,
-       EXTRACT(DAY FROM (COALESCE(ended_at,CURRENT_DATE)-started_at))/30.44)),2) avg_observed_ltv
+       EXTRACT(EPOCH FROM (COALESCE(ended_at,CURRENT_DATE)-started_at))/86400.0/30.44)),2) avg_observed_ltv
 FROM subscriptions GROUP BY 1 ORDER BY 2 DESC;
 
 -- Q18: Median days from signup to onboarding completion
@@ -268,9 +268,10 @@ SELECT c.acquisition_channel,c.plan,COUNT(DISTINCT e.customer_id) active_custome
 FROM customers c JOIN events e USING(customer_id) GROUP BY 1,2 ORDER BY 1,3 DESC;
 
 -- Q53: RFM-style behavioral segmentation (recency, frequency, monetary proxy)
-WITH activity AS (SELECT c.customer_id,MAX(e.occurred_at)::date last_seen,COUNT(e.event_id) frequency,
- COALESCE(MAX(s.monthly_price),0) monthly_value FROM customers c LEFT JOIN events e USING(customer_id)
- LEFT JOIN subscriptions s USING(customer_id) GROUP BY 1)
+WITH activity AS (SELECT c.customer_id,e.last_seen,e.frequency,COALESCE(s.monthly_value,0) monthly_value
+ FROM customers c LEFT JOIN (SELECT customer_id,MAX(occurred_at)::date last_seen,COUNT(*) frequency
+                              FROM events GROUP BY 1) e USING(customer_id)
+ LEFT JOIN (SELECT customer_id,MAX(monthly_price) monthly_value FROM subscriptions GROUP BY 1) s USING(customer_id))
 SELECT customer_id,(SELECT MAX(occurred_at)::date FROM events)-last_seen recency_days,
  frequency,monthly_value,CASE WHEN monthly_value>=59 AND frequency>=10 THEN 'high_value_engaged'
  WHEN frequency>=10 THEN 'engaged_free_or_low_value' ELSE 'needs_nurture' END segment FROM activity;

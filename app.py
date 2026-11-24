@@ -14,7 +14,8 @@ st.caption("Product analytics & growth intelligence · PostgreSQL-backed portfol
 try:
     kpis = query_df("""
         SELECT (SELECT COUNT(*) FROM customers) customers,
-               (SELECT COUNT(DISTINCT customer_id) FROM events WHERE occurred_at >= CURRENT_DATE - INTERVAL '30 days') mau_30d,
+               (SELECT COUNT(DISTINCT customer_id) FROM events
+                WHERE occurred_at >= (SELECT MAX(occurred_at) FROM events) - INTERVAL '30 days') mau_30d,
                (SELECT COUNT(*) FROM subscriptions WHERE status='active') paid_customers,
                (SELECT COALESCE(SUM(monthly_price),0) FROM subscriptions WHERE status='active') mrr
     """)
@@ -28,10 +29,16 @@ try:
     with left:
         st.subheader("Activation funnel")
         funnel = query_df("""
+            WITH customer_steps AS (
+              SELECT customer_id,BOOL_OR(event_name='signup') signed_up,
+                BOOL_OR(event_name='onboarding_complete') onboarded,
+                BOOL_OR(event_name='project_created') created_project
+              FROM events GROUP BY customer_id
+            )
             SELECT step,users FROM (
-              SELECT 1 sort,'Signed up' step,COUNT(DISTINCT customer_id) users FROM events WHERE event_name='signup'
-              UNION ALL SELECT 2,'Completed onboarding',COUNT(DISTINCT customer_id) FROM events WHERE event_name='onboarding_complete'
-              UNION ALL SELECT 3,'Created a project',COUNT(DISTINCT customer_id) FROM events WHERE event_name='project_created'
+              SELECT 1 sort,'Signed up' step,COUNT(*) FILTER(WHERE signed_up) users FROM customer_steps
+              UNION ALL SELECT 2,'Completed onboarding',COUNT(*) FILTER(WHERE signed_up AND onboarded) FROM customer_steps
+              UNION ALL SELECT 3,'Created a project',COUNT(*) FILTER(WHERE signed_up AND onboarded AND created_project) FROM customer_steps
             ) x ORDER BY sort
         """)
         st.plotly_chart(px.funnel(funnel, x="users", y="step", title="Signup → activation"), use_container_width=True)
