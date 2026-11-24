@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: productpulse-postgres
+    environment:
+      POSTGRES_DB: productpulse
+      POSTGRES_USER: productpulse
+      POSTGRES_PASSWORD: productpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - productpulse_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U productpulse -d productpulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  productpulse_data:

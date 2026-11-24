@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "productpulse-analytics-intelligence"
+version = "1.0.0"
+description = "A PostgreSQL product analytics portfolio project with reproducible synthetic data."
+requires-python = ">=3.11"
+dependencies = ["pandas>=2.1", "psycopg[binary]>=3.1", "streamlit>=1.32", "plotly>=5.18"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
