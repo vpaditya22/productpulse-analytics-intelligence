@@ -34,7 +34,6 @@ def load_csvs(data_dir: str | Path = DEFAULT_DATA_DIR, url: str | None = None) -
             if not file_path.is_file():
                 raise FileNotFoundError(f"Missing {file_path}; run with --generate first.")
             with file_path.open(newline="", encoding="utf-8") as csv_file:
-                reader = csv.DictReader(csv_file)
                 query = sql.SQL("COPY {} ({}) FROM STDIN WITH (FORMAT CSV, HEADER TRUE)").format(
                     sql.Identifier(table), sql.SQL(", ").join(map(sql.Identifier, columns))
                 )

@@ -6,8 +6,6 @@ import math
 
 import pandas as pd
 
-from productpulse.config import database_url
-
 
 def query_df(query: str, params: tuple = (), url: str | None = None) -> pd.DataFrame:
     """Run a read-only analytics query and return a dataframe."""
@@ -15,11 +13,13 @@ def query_df(query: str, params: tuple = (), url: str | None = None) -> pd.DataF
 
     from productpulse.config import database_url
 
-    with psycopg.connect(url or database_url(), options="-c default_transaction_read_only=on") as conn:
-        with conn.cursor() as cur:
+    try:
+        with psycopg.connect(url or database_url(), options="-c default_transaction_read_only=on") as conn, conn.cursor() as cur:
             cur.execute(query, params)
             columns = [field.name for field in cur.description]
             return pd.DataFrame(cur.fetchall(), columns=columns)
+    except psycopg.Error as exc:
+        raise RuntimeError("PostgreSQL query failed; check the database and schema.") from exc
 
 
 def two_proportion_test(control_converted: int, control_total: int,

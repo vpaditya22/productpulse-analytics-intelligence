@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import random
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,7 @@ def generate_records(seed: int = SEED, customers: int = 300) -> dict[str, list[d
         customer_rows.append({"customer_id": customer_id, "created_at": created.isoformat(), "acquisition_channel": channel,
                               "country": rng.choice(("US", "GB", "IN", "CA", "DE")), "plan": plan,
                               "is_synthetic": True})
-        signup_at = datetime.combine(created, time(9 + rng.randrange(10), rng.randrange(60)), tzinfo=timezone.utc)
+        signup_at = datetime.combine(created, time(9 + rng.randrange(10), rng.randrange(60)), tzinfo=UTC)
         user_events = [("signup", signup_at)]
         if rng.random() < 0.76:
             user_events.append(("onboarding_complete", signup_at + timedelta(hours=rng.randrange(2, 48))))
@@ -41,7 +41,7 @@ def generate_records(seed: int = SEED, customers: int = 300) -> dict[str, list[d
         for _ in range(rng.randrange(2, 19)):
             event_date = min(END, created + timedelta(days=rng.randrange(0, max(1, (END - created).days + 1))))
             event_name = rng.choice(EVENTS[2:5] + ("feature_used", "feature_used", "purchase"))
-            user_events.append((event_name, datetime.combine(event_date, time(rng.randrange(24), rng.randrange(60)), tzinfo=timezone.utc)))
+            user_events.append((event_name, datetime.combine(event_date, time(rng.randrange(24), rng.randrange(60)), tzinfo=UTC)))
         for event_index, (event_name, occurred_at) in enumerate(user_events, 1):
             event_rows.append({"event_id": f"E{i:05d}-{event_index:03d}", "customer_id": customer_id,
                                "event_name": event_name, "occurred_at": occurred_at.isoformat(),

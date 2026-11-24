@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import streamlit as st
 import plotly.express as px
+import streamlit as st
 
 from productpulse.analytics import query_df, two_proportion_test
 
@@ -84,7 +84,7 @@ try:
         z.metric("Two-sided p-value", f"{result['p_value']:.3f}", "Significant at 5%" if result["significant_95"] else "Not significant at 5%")
         st.caption("Two-sided pooled two-proportion z-test; interpret as an educational demo, not a launch decision.")
         st.dataframe(experiment, hide_index=True, use_container_width=True)
-except Exception:  # Streamlit should show friendly setup guidance for database failures.
+except (ImportError, RuntimeError, ValueError):  # Show setup guidance for unavailable database dependencies.
     st.warning("Connect the PostgreSQL database to explore the dashboard.")
     st.code("docker compose up -d postgres\npython -m productpulse.etl --generate --load\nstreamlit run app.py")
     st.caption("Check DATABASE_URL and confirm that PostgreSQL is running.")
