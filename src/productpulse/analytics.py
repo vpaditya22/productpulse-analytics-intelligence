@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from numbers import Integral
 
 import pandas as pd
 
@@ -25,6 +26,14 @@ def query_df(query: str, params: tuple = (), url: str | None = None) -> pd.DataF
 def two_proportion_test(control_converted: int, control_total: int,
                         treatment_converted: int, treatment_total: int) -> dict[str, float | bool]:
     """Two-sided pooled z-test for independent conversion proportions."""
+    counts = {
+        "control_converted": control_converted,
+        "control_total": control_total,
+        "treatment_converted": treatment_converted,
+        "treatment_total": treatment_total,
+    }
+    if any(isinstance(value, bool) or not isinstance(value, Integral) for value in counts.values()):
+        raise TypeError("Experiment counts must be integers.")
     if min(control_converted, treatment_converted) < 0 or min(control_total, treatment_total) <= 0:
         raise ValueError("Counts must be non-negative and sample sizes must be positive.")
     if control_converted > control_total or treatment_converted > treatment_total:

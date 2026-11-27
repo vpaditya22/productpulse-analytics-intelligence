@@ -22,3 +22,9 @@ def test_zero_baseline_lift_is_defined_without_division_error():
 def test_two_proportion_test_rejects_invalid_counts(counts):
     with pytest.raises(ValueError):
         two_proportion_test(*counts)
+
+
+@pytest.mark.parametrize("counts", [(1.5, 10, 1, 10), (True, 10, 1, 10), ("1", 10, 1, 10)])
+def test_two_proportion_test_requires_integer_counts(counts):
+    with pytest.raises(TypeError, match="counts must be integers"):
+        two_proportion_test(*counts)
