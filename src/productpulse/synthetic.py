@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import random
 from datetime import UTC, date, datetime, time, timedelta
+from numbers import Integral
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,13 @@ EVENTS = ("signup", "onboarding_complete", "project_created", "invite_sent", "fe
 
 def generate_records(seed: int = SEED, customers: int = 300) -> dict[str, list[dict[str, Any]]]:
     """Generate stable demo tables; every row is fictional and not user data."""
-    rng = random.Random(seed)
+    if isinstance(customers, bool) or not isinstance(customers, Integral):
+        raise TypeError("customers must be an integer.")
+    if customers < 1:
+        raise ValueError("customers must be positive.")
+    if isinstance(seed, bool) or not isinstance(seed, Integral):
+        raise TypeError("seed must be an integer.")
+    rng = random.Random(int(seed))
     customer_rows: list[dict[str, Any]] = []
     event_rows: list[dict[str, Any]] = []
     subscription_rows: list[dict[str, Any]] = []

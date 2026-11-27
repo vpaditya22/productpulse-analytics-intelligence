@@ -1,3 +1,5 @@
+import pytest
+
 from productpulse.synthetic import generate_records
 
 
@@ -20,3 +22,18 @@ def test_event_and_experiment_rows_reference_customers():
 def test_paid_demo_data_has_active_and_cancelled_subscriptions():
     statuses = {row["status"] for row in generate_records(seed=20261124, customers=300)["subscriptions"]}
     assert statuses == {"active", "cancelled"}
+
+
+@pytest.mark.parametrize(
+    ("customers", "error"),
+    [(0, ValueError), (-1, ValueError), (1.5, TypeError), (True, TypeError), ("12", TypeError)],
+)
+def test_synthetic_generator_rejects_invalid_customer_counts(customers, error):
+    with pytest.raises(error, match="customers must"):
+        generate_records(customers=customers)
+
+
+@pytest.mark.parametrize("seed", [True, 1.5, "not-an-integer"])
+def test_synthetic_generator_rejects_invalid_seeds(seed):
+    with pytest.raises(TypeError, match="seed must be an integer"):
+        generate_records(seed=seed)
